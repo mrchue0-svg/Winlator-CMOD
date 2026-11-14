@@ -119,6 +119,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Intent intent = getIntent();
         editInputControls = intent.getBooleanExtra("edit_input_controls", false);
 
+        // RYL2_INPUT_CONTROLS_V1
+        if (intent.getBooleanExtra("ryl2_open_input_controls", false)) {
+            selectedProfileId = intent.getIntExtra(
+                "ryl2_input_profile_id", 0);
+
+            onNavigationItemSelected(
+                navigationView.getMenu().findItem(
+                    R.id.main_menu_input_controls));
+
+            navigationView.setCheckedItem(
+                R.id.main_menu_input_controls);
+
+            return;
+        }
+
+
         int ryl2SetupId = intent.getIntExtra("ryl2_setup_container_id", 0);
         if (ryl2SetupId == 1 || ryl2SetupId == 2) {
             onNavigationItemSelected(
