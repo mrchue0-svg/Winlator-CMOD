@@ -430,6 +430,14 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
         containerManager.activateContainer(container);
 
+        // RYL2: resolve a named shortcut inside CMOD private storage.
+        if ((shortcutPath == null || shortcutPath.isEmpty())
+                && shortcutName != null && shortcutName.matches("[A-Za-z0-9 _.-]{1,80}")
+                && !shortcutName.equals(".") && !shortcutName.equals("..")) {
+            File candidate = new File(container.getDesktopDir(), shortcutName + ".desktop");
+            if (candidate.isFile()) shortcutPath = candidate.getAbsolutePath();
+        }
+
         if (shortcutPath != null && !shortcutPath.isEmpty()) {
             shortcut = new Shortcut(container, new File(shortcutPath));
         }
