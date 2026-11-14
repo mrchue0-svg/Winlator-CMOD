@@ -118,6 +118,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         Intent intent = getIntent();
         editInputControls = intent.getBooleanExtra("edit_input_controls", false);
+
+        int ryl2SetupId = intent.getIntExtra("ryl2_setup_container_id", 0);
+        if (ryl2SetupId == 1 || ryl2SetupId == 2) {
+            onNavigationItemSelected(
+                navigationView.getMenu().findItem(R.id.main_menu_containers));
+            openRyl2ContainerSetup(ryl2SetupId);
+            return;
+        }
+
         if (editInputControls) {
             selectedProfileId = intent.getIntExtra("selected_profile_id", 0);
             actionBar.setHomeAsUpIndicator(R.drawable.icon_action_bar_back);
@@ -145,6 +154,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
             }
         }
+    }
+
+
+    // RYL2_CONTAINER_SETUP_V1
+    private void openRyl2ContainerSetup(int id) {
+        if (id != 1 && id != 2) return;
+
+        if (containerManager.getContainerById(id) == null) {
+            android.widget.Toast.makeText(
+                this, "RYL2 Container " + id + " not found",
+                android.widget.Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        getSupportFragmentManager().beginTransaction()
+            .replace(R.id.FLFragmentContainer,
+                new ContainerDetailFragment(id))
+            .commit();
     }
 
     private void showAllFilesAccessDialog() {
