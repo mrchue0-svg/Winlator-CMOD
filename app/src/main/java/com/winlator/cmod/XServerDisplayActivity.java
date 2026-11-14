@@ -843,7 +843,18 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                     }
                 }
                 preloaderDialog.closeOnUiThread();
-                AppUtils.restartApplication(getApplicationContext());
+                if (getIntent().hasExtra("shortcut_name")) {
+                    Intent launcherIntent = getPackageManager()
+                        .getLaunchIntentForPackage("com.ryl2.remastered");
+                    if (launcherIntent != null) {
+                        launcherIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                            | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        startActivity(launcherIntent);
+                    }
+                    finish();
+                } else {
+                    AppUtils.restartApplication(getApplicationContext());
+                }
             }
         }, 1000);
     }
