@@ -895,8 +895,8 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                 boolean hasGameWindow = false;
 
                 for (com.winlator.cmod.xserver.Window window :
-                        xServer.getWindows()) {
-                    if (window.isMapped()) {
+                        xServer.windowManager.rootWindow.getChildren()) {
+                    if (window.isApplicationWindow()) {
                         hasGameWindow = true;
                         break;
                     }
