@@ -261,6 +261,8 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        startRyl2AutoReturn();
+
         super.onCreate(savedInstanceState);
         AppUtils.hideSystemUI(this);
         AppUtils.keepScreenOn(this);
@@ -869,6 +871,68 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         super.onStop();
         savePlaytimeData();
         handler.removeCallbacks(savePlaytimeRunnable);
+    }
+
+
+    // RYL2_AUTO_RETURN_V1
+    private final android.os.Handler ryl2Handler =
+        new android.os.Handler(android.os.Looper.getMainLooper());
+
+    private boolean ryl2SeenWindow = false;
+    private int ryl2EmptyChecks = 0;
+
+    private final Runnable ryl2AutoReturn = new Runnable() {
+        @Override
+        public void run() {
+            if (isFinishing() || isDestroyed()) return;
+
+            String name = getIntent().getStringExtra("shortcut_name");
+
+            if (!"Login".equals(name) &&
+                !"ClientSetup".equals(name)) return;
+
+            try {
+                boolean hasGameWindow = false;
+
+                for (com.winlator.cmod.xserver.Window window :
+                        xServer.getWindows()) {
+                    if (window.isMapped()) {
+                        hasGameWindow = true;
+                        break;
+                    }
+                }
+
+                if (hasGameWindow) {
+                    ryl2SeenWindow = true;
+                    ryl2EmptyChecks = 0;
+                } else if (ryl2SeenWindow) {
+                    ryl2EmptyChecks++;
+
+                    if (ryl2EmptyChecks >= 3) {
+                        android.content.Intent intent =
+                            getPackageManager().getLaunchIntentForPackage(
+                                "com.ryl2.remastered");
+
+                        if (intent != null) {
+                            intent.addFlags(
+                                android.content.Intent.FLAG_ACTIVITY_NEW_TASK |
+                                android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                            startActivity(intent);
+                            finish();
+                            return;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                android.util.Log.e("RYL2", "Auto return", e);
+            }
+
+            ryl2Handler.postDelayed(this, 2000);
+        }
+    };
+
+    private void startRyl2AutoReturn() {
+        ryl2Handler.postDelayed(ryl2AutoReturn, 10000);
     }
 
     @Override
