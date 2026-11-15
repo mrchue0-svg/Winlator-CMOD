@@ -299,6 +299,7 @@ void openRyl2Shortcut(int id, String shortcutName) {
     );
     intent.putExtra("container_id", id);
     intent.putExtra("shortcut_name", shortcutName);
+        intent.putExtra("ryl2_input_profile", "RYL");
     try {
         startActivity(intent);
     } catch (Exception e) {

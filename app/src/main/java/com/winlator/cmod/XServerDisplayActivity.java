@@ -522,6 +522,19 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         preloaderDialog.show(R.string.starting_up);
 
         inputControlsManager = new InputControlsManager(this);
+
+        // RYL2_AUTO_INPUT
+        if ("RYL".equals(getIntent().getStringExtra("ryl2_input_profile"))) {
+            inputControlsManager.loadProfiles(false);
+            for (com.winlator.cmod.inputcontrols.ControlsProfile profile : inputControlsManager.getProfiles()) {
+                if ("RYL".equalsIgnoreCase(profile.getName())) {
+                    final com.winlator.cmod.inputcontrols.ControlsProfile rylProfile = profile;
+                    inputControlsView.post(() -> showInputControls(rylProfile));
+                    break;
+                }
+            }
+        }
+
         xServer = new XServer(new ScreenInfo(screenSize));
         xServer.setWinHandler(winHandler);
 
