@@ -46,6 +46,15 @@ public class Ryl2LauncherActivity extends Activity {
             if (imageFs == null) {
                 android.util.Log.e("RYL2",
                     "ImageFS belum tersedia. Container ditangguhkan.");
+                runOnUiThread(() -> {
+                    prefs.edit().putString("client_status", "WAITING FOR IMAGEFS").apply();
+                    status.setText("CLIENT STATUS: WAITING FOR IMAGEFS");
+                    new AlertDialog.Builder(this)
+                        .setTitle("WINLATOR SETUP REQUIRED")
+                        .setMessage("RYL2 Client telah diekstrak, tetapi Winlator ImageFS belum tersedia. Selesaikan penyediaan Winlator sebelum container HIGH dan LOW boleh dicipta.")
+                        .setPositiveButton("OK", null)
+                        .show();
+                });
                 return;
             }
 
@@ -69,13 +78,14 @@ public class Ryl2LauncherActivity extends Activity {
 
                     prefs.edit()
                         .putBoolean("ryl2_auto_install_done", true)
+                        .putString("client_status", "INSTALLED")
                         .apply();
 
                     android.util.Log.i("RYL2",
                         "HIGH and LOW containers created");
 
                     runOnUiThread(() ->
-                        status.setText("RYL2 INSTALLATION COMPLETE")
+                        status.setText("CLIENT STATUS: INSTALLED")
                     );
                 });
             });
@@ -90,6 +100,15 @@ public class Ryl2LauncherActivity extends Activity {
     void installBundledRyl2() {
         new Thread(() -> {
             try {
+                File existingClient = new File(getExternalFilesDir(null), "RYL2Client");
+                if (new File(existingClient, "Login.exe").isFile()) {
+                    runOnUiThread(() -> {
+                        prefs.edit().putString("client_status", "PREPARING CONTAINERS").apply();
+                        status.setText("CLIENT STATUS: PREPARING CONTAINERS");
+                        prepareRyl2Containers();
+                    });
+                    return;
+                }
                 File base = new File(getExternalFilesDir(null), "RYL2Client");
                 if (!base.exists() && !base.mkdirs())
                     throw new IOException("Cannot create game folder");
@@ -142,7 +161,8 @@ public class Ryl2LauncherActivity extends Activity {
                     throw new IOException("Login.exe not found after extraction");
 
                 runOnUiThread(() -> {
-                    prefs.edit().putString("client_status", "EXTRACTED").apply();
+                    prefs.edit().putString("client_status", "PREPARING CONTAINERS").apply();
+                    status.setText("CLIENT STATUS: PREPARING CONTAINERS");
                     prepareRyl2Containers();
                     status.setText("CLIENT STATUS: EXTRACTED");
                     new AlertDialog.Builder(this)
@@ -174,14 +194,26 @@ public class Ryl2LauncherActivity extends Activity {
         super.onCreate(b);
         prefs = getSharedPreferences("ryl2_settings", MODE_PRIVATE);
 
-        if (!prefs.getBoolean("ryl2_auto_install_done", false)) {
-            // Installation is marked complete only after extraction succeeds.
-            installBundledRyl2();
-        }
+        boolean installed = prefs.getBoolean("ryl2_auto_install_done", false);
 
         getWindow().setStatusBarColor(dark);
         getWindow().setNavigationBarColor(dark);
         showHome();
+
+        if (!installed) {
+            new AlertDialog.Builder(this)
+                .setTitle("INSTALL RYL2 CLIENT")
+                .setMessage("RYL2 Client perlu dipasang sebelum permainan boleh dimulakan. Tekan INSTALL untuk extract fail game.")
+                .setCancelable(false)
+                .setPositiveButton("INSTALL", (dialog, which) -> {
+                    status.setText("CLIENT STATUS: INSTALLING");
+                    installBundledRyl2();
+                })
+                .setNegativeButton("LATER", (dialog, which) -> {
+                    status.setText("CLIENT STATUS: NOT INSTALLED");
+                })
+                .show();
+        }
     }
 
     GradientDrawable panel() {
@@ -281,6 +313,16 @@ public class Ryl2LauncherActivity extends Activity {
 
 
 void startProfile(String profile) {
+        if (!prefs.getBoolean("ryl2_auto_install_done", false)) {
+            new AlertDialog.Builder(this)
+                .setTitle("CLIENT NOT READY")
+                .setMessage("Sila lengkapkan pemasangan RYL2 Client dan container terlebih dahulu.")
+                .setPositiveButton("INSTALL CLIENT", (d, w) -> installBundledRyl2())
+                .setNegativeButton("CANCEL", null)
+                .show();
+            return;
+        }
+
     int id = "HIGH".equals(profile) ? 1 : 2;
     prefs.edit().putString("selected_profile", profile).apply();
     launchCmodContainer(profile, id);
@@ -308,6 +350,16 @@ void startProfile(String profile) {
 
 
 void launchClientSetup(String profile) {
+        if (!prefs.getBoolean("ryl2_auto_install_done", false)) {
+            new AlertDialog.Builder(this)
+                .setTitle("CLIENT NOT READY")
+                .setMessage("Sila lengkapkan pemasangan RYL2 Client dan container terlebih dahulu.")
+                .setPositiveButton("INSTALL CLIENT", (d, w) -> installBundledRyl2())
+                .setNegativeButton("CANCEL", null)
+                .show();
+            return;
+        }
+
     int id = "HIGH".equals(profile) ? 1 : 2;
     openRyl2Shortcut(id, "ClientSetup");
 }
