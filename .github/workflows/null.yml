@@ -41,6 +41,14 @@ jobs:
         mkdir -p app/src/main/assets/ryl2
         gh release download V1.0.0-beta --repo mrchue0-svg/Winlator-CMOD --pattern ryl2folderpatch.zip --dir app/src/main/assets/ryl2
 
+    - name: Cache Proton files
+      uses: actions/cache@v4
+      with:
+        path: |
+          app/src/main/assets/proton
+          app/build
+        key: ryl2-proton-${{ runner.os }}-v1
+
     - name: Build with Gradle
       run: ./gradlew assembleDebug
 
