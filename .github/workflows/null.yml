@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ "winlator_bionic" ]
 
+permissions:
+  contents: write
+
 jobs:
   build:
 
@@ -59,3 +62,10 @@ jobs:
       with:
         name: ryl2remastered-mobile
         path: ryl2remastered-mobile.apk
+
+    - name: Publish Beta APK
+      if: github.event_name == 'push' && github.ref == 'refs/heads/winlator_bionic'
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        gh release upload V1.0.0-beta ryl2remastered-mobile.apk --clobber --repo mrchue0-svg/Winlator-CMOD
