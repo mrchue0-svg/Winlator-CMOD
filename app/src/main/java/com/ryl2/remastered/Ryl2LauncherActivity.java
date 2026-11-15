@@ -30,12 +30,12 @@ public class Ryl2LauncherActivity extends Activity {
             org.json.JSONObject high = new org.json.JSONObject();
             high.put("name", "RYL2 HIGH");
             high.put("screenSize", "1280x720");
-            high.put("drives", "F:/storage/emulated/0/Download;D:/storage/emulated/0/Download/RYL2Client");
+            high.put("drives", "F:/storage/emulated/0/Download;D:/storage/emulated/0/Android/data/com.ryl2remastered.winlator/files/RYL2Client");
 
             org.json.JSONObject low = new org.json.JSONObject();
             low.put("name", "RYL2 LOW");
             low.put("screenSize", "800x600");
-            low.put("drives", "F:/storage/emulated/0/Download;D:/storage/emulated/0/Download/RYL2Client");
+            low.put("drives", "F:/storage/emulated/0/Download;D:/storage/emulated/0/Android/data/com.ryl2remastered.winlator/files/RYL2Client");
 
             java.io.File imageFsRoot =
                 new java.io.File(getFilesDir(), "imagefs");
@@ -89,11 +89,7 @@ public class Ryl2LauncherActivity extends Activity {
     void installBundledRyl2() {
         new Thread(() -> {
             try {
-                File base = new File(
-                    android.os.Environment.getExternalStoragePublicDirectory(
-                        android.os.Environment.DIRECTORY_DOWNLOADS
-                    ), "RYL2Client"
-                );
+                File base = new File(getExternalFilesDir(null), "RYL2Client");
                 if (!base.exists() && !base.mkdirs())
                     throw new IOException("Cannot create game folder");
 
