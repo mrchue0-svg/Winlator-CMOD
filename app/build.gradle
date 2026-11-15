@@ -221,3 +221,10 @@ dependencies {
 
 
 
+
+
+android {
+    androidResources {
+        noCompress 'rar'
+    }
+}

@@ -2,6 +2,7 @@ package com.ryl2.remastered;
 
 import com.winlator.cmod.R;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.content.Intent;
@@ -20,6 +21,122 @@ import java.io.*;
 import java.util.zip.*;
 
 public class Ryl2LauncherActivity extends Activity {
+
+    void prepareRyl2Containers() {
+        com.winlator.cmod.container.ContainerManager manager =
+            new com.winlator.cmod.container.ContainerManager(this);
+
+        try {
+            org.json.JSONObject high = new org.json.JSONObject();
+            high.put("name", "RYL2 HIGH");
+            high.put("screenSize", "1280x720");
+            high.put("drives", "F:/storage/emulated/0/Download;D:/storage/emulated/0/Download/RYL2Client");
+
+            org.json.JSONObject low = new org.json.JSONObject();
+            low.put("name", "RYL2 LOW");
+            low.put("screenSize", "800x600");
+            low.put("drives", "F:/storage/emulated/0/Download;D:/storage/emulated/0/Download/RYL2Client");
+
+            java.io.File imageFsRoot =
+                new java.io.File(getFilesDir(), "imagefs");
+
+            com.winlator.cmod.xenvironment.ImageFs imageFs =
+                com.winlator.cmod.xenvironment.ImageFs.find(imageFsRoot);
+
+            if (imageFs == null) {
+                android.util.Log.e("RYL2",
+                    "ImageFS belum tersedia. Container ditangguhkan.");
+                return;
+            }
+
+            android.util.Log.i("RYL2",
+                "ImageFS tersedia untuk penciptaan container.");
+
+            com.winlator.cmod.contents.ContentsManager contentsManager =
+                new com.winlator.cmod.contents.ContentsManager(this);
+
+            manager.createContainerAsync(high, contentsManager, container -> {
+                if (container == null) {
+                    android.util.Log.e("RYL2", "HIGH container failed");
+                    return;
+                }
+
+                manager.createContainerAsync(low, contentsManager, lowContainer -> {
+                    if (lowContainer == null) {
+                        android.util.Log.e("RYL2", "LOW container failed");
+                        return;
+                    }
+
+                    prefs.edit()
+                        .putBoolean("ryl2_auto_install_done", true)
+                        .apply();
+
+                    android.util.Log.i("RYL2",
+                        "HIGH and LOW containers created");
+
+                    runOnUiThread(() ->
+                        status.setText("RYL2 INSTALLATION COMPLETE")
+                    );
+                });
+            });
+        } catch (org.json.JSONException e) {
+            android.util.Log.e("RYL2", "Container setup failed", e);
+        }
+    }
+
+
+
+    void installBundledRyl2() {
+        new Thread(() -> {
+            try {
+                File base = new File(
+                    android.os.Environment.getExternalStoragePublicDirectory(
+                        android.os.Environment.DIRECTORY_DOWNLOADS
+                    ), "RYL2Client"
+                );
+                if (!base.exists() && !base.mkdirs())
+                    throw new IOException("Cannot create game folder");
+
+                File archive = new File(
+                    getCacheDir(), "REMASTERED.rar"
+                );
+
+                try (InputStream in = getAssets().open("ryl2/REMASTERED.rar");
+                     FileOutputStream out = new FileOutputStream(archive)) {
+                    byte[] buffer = new byte[65536];
+                    int n;
+                    while ((n = in.read(buffer)) != -1)
+                        out.write(buffer, 0, n);
+                }
+
+                com.github.junrar.Junrar.extract(archive, base);
+                archive.delete();
+
+                runOnUiThread(() -> {
+                    prefs.edit()
+                        .putString("client_status", "EXTRACTED")
+                        .apply();
+                    prepareRyl2Containers();
+                    status.setText("CLIENT STATUS: EXTRACTED");
+                    new AlertDialog.Builder(this)
+                        .setTitle("RYL2 CLIENT INSTALLED")
+                        .setMessage("Client berjaya diekstrak.")
+                        .setPositiveButton("OK", null)
+                        .show();
+                });
+            } catch (Exception e) {
+                runOnUiThread(() ->
+                    new AlertDialog.Builder(this)
+                        .setTitle("INSTALLATION ERROR")
+                        .setMessage(e.toString())
+                        .setPositiveButton("OK", null)
+                        .show()
+                );
+            }
+        }).start();
+    }
+
+
     LinearLayout root;
     TextView status;
     int gold = Color.rgb(235,190,91);
@@ -30,6 +147,12 @@ public class Ryl2LauncherActivity extends Activity {
     @Override public void onCreate(Bundle b) {
         super.onCreate(b);
         prefs = getSharedPreferences("ryl2_settings", MODE_PRIVATE);
+
+        if (!prefs.getBoolean("ryl2_auto_install_done", false)) {
+            // Installation is marked complete only after extraction succeeds.
+            installBundledRyl2();
+        }
+
         getWindow().setStatusBarColor(dark);
         getWindow().setNavigationBarColor(dark);
         showHome();
