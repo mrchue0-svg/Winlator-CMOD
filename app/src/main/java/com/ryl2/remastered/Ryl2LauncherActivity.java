@@ -86,6 +86,7 @@ public class Ryl2LauncherActivity extends Activity {
 
 
 
+
     void installBundledRyl2() {
         new Thread(() -> {
             try {
@@ -93,25 +94,55 @@ public class Ryl2LauncherActivity extends Activity {
                 if (!base.exists() && !base.mkdirs())
                     throw new IOException("Cannot create game folder");
 
-                File archive = new File(
-                    getCacheDir(), "REMASTERED.rar"
-                );
+                try (java.io.InputStream input =
+                         getAssets().open("ryl2/ryl2folderpatch.zip");
+                     java.util.zip.ZipInputStream zip =
+                         new java.util.zip.ZipInputStream(input)) {
 
-                try (InputStream in = getAssets().open("ryl2/REMASTERED.rar");
-                     FileOutputStream out = new FileOutputStream(archive)) {
+                    java.util.zip.ZipEntry entry;
                     byte[] buffer = new byte[65536];
-                    int n;
-                    while ((n = in.read(buffer)) != -1)
-                        out.write(buffer, 0, n);
+                    String root = base.getCanonicalPath() + File.separator;
+
+                    while ((entry = zip.getNextEntry()) != null) {
+                        String name = entry.getName().replace('\\', '/');
+
+                        if (name.startsWith("ryl2folderpatch/"))
+                            name = name.substring("ryl2folderpatch/".length());
+
+                        if (name.isEmpty()) {
+                            zip.closeEntry();
+                            continue;
+                        }
+
+                        File target = new File(base, name);
+
+                        if (!target.getCanonicalPath().startsWith(root))
+                            throw new IOException("Unsafe ZIP path: " + name);
+
+                        if (entry.isDirectory()) {
+                            if (!target.isDirectory() && !target.mkdirs())
+                                throw new IOException("Cannot create directory: " + name);
+                        } else {
+                            File parent = target.getParentFile();
+
+                            if (!parent.isDirectory() && !parent.mkdirs())
+                                throw new IOException("Cannot create directory: " + name);
+
+                            try (FileOutputStream out = new FileOutputStream(target)) {
+                                int n;
+                                while ((n = zip.read(buffer)) != -1)
+                                    out.write(buffer, 0, n);
+                            }
+                        }
+                        zip.closeEntry();
+                    }
                 }
 
-                com.github.junrar.Junrar.extract(archive, base);
-                archive.delete();
+                if (!new File(base, "Login.exe").isFile())
+                    throw new IOException("Login.exe not found after extraction");
 
                 runOnUiThread(() -> {
-                    prefs.edit()
-                        .putString("client_status", "EXTRACTED")
-                        .apply();
+                    prefs.edit().putString("client_status", "EXTRACTED").apply();
                     prepareRyl2Containers();
                     status.setText("CLIENT STATUS: EXTRACTED");
                     new AlertDialog.Builder(this)
@@ -131,7 +162,6 @@ public class Ryl2LauncherActivity extends Activity {
             }
         }).start();
     }
-
 
     LinearLayout root;
     TextView status;

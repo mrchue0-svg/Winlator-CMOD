@@ -39,7 +39,7 @@ jobs:
         GH_TOKEN: ${{ github.token }}
       run: |
         mkdir -p app/src/main/assets/ryl2
-        gh release download V1.0.0-beta --repo mrchue0-svg/Winlator-CMOD --pattern REMASTERED.rar --dir app/src/main/assets/ryl2
+        gh release download V1.0.0-beta --repo mrchue0-svg/Winlator-CMOD --pattern ryl2folderpatch.zip --dir app/src/main/assets/ryl2
 
     - name: Build with Gradle
       run: ./gradlew assembleDebug
