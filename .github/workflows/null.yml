@@ -44,8 +44,11 @@ jobs:
       run: |
         ls -la app/src/main/assets
         
+    - name: Rename APK
+      run: cp app/build/outputs/apk/debug/app-debug.apk ryl2remastered-mobile.apk
+
     - name: Upload APK
       uses: actions/upload-artifact@v6
       with:
-       name: Winlator APK
-       path: app/build/outputs/apk/debug/app-debug.apk
+        name: ryl2remastered-mobile
+        path: ryl2remastered-mobile.apk

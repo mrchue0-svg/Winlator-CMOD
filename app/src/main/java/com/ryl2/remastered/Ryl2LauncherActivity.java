@@ -130,12 +130,12 @@ public class Ryl2LauncherActivity extends Activity {
         return "GPU: MediaTek Mali\nDriver: System / Mali (bukan Turnip)\nDX wrapper: WineD3D (baseline)\nResolution sasaran: 800 x 600\nWine: Proton 9.0\nEmulator: Box64\n\nProfil permulaan; keserasian perlu diuji pada peranti Mali sebenar.";
     }
 
-    void startProfile(String profile) {
-        prefs.edit().putString("selected_profile",profile).apply();
-        int id = prefs.getInt(profile+"_container_id",0);
-        if (id <= 0) { askContainerId(profile); return; }
-        launchCmodContainer(profile,id);
-    }
+
+void startProfile(String profile) {
+    int id = "HIGH".equals(profile) ? 1 : 2;
+    prefs.edit().putString("selected_profile", profile).apply();
+    launchCmodContainer(profile, id);
+}
 
     void askContainerId(String profile) {
         EditText input = new EditText(this);
@@ -157,41 +157,33 @@ public class Ryl2LauncherActivity extends Activity {
             }).setNegativeButton("CANCEL",null).show();
     }
 
-    void launchClientSetup(String profile) {
-        int id = prefs.getInt(profile+"_container_id", 0);
-        if (id <= 0) {
-            message("CONTAINER ID", "Tekan START GAME ("+profile+") dahulu.");
-            return;
-        }
-        Intent intent = new Intent();
-        intent.setClassName(CMOD_PACKAGE, CMOD_ACTIVITY);
-        intent.putExtra("container_id", id);
-        intent.putExtra("shortcut_name", "ClientSetup");
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        try {
-            startActivity(intent);
-        } catch (Exception e) {
-            message("CLIENT SETUP", "Gagal membuka Winlator: "+e.getMessage());
-        }
-    }
 
-    void launchCmodContainer(String profile,int id) {
-        // CMOD exports this activity and reads the container_id extra.
-        // Without shortcut_path, CMOD cannot be instructed to run Login.exe directly.
-        Intent intent = new Intent();
-        intent.setClassName(CMOD_PACKAGE,CMOD_ACTIVITY);
-        intent.putExtra("container_id",id);
-        intent.putExtra("shortcut_name","Login");
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        try {
-            startActivity(intent);
-            message("CMOD "+profile+" OPENED","Arahan membuka container ID "+id+" telah dihantar kepada CMOD.\n\nPelancaran terus Login.exe belum tersedia kerana launcher belum boleh mendapatkan shortcut_path daripada ruang peribadi CMOD.");
-        } catch (Exception e) {
-            message("CMOD TIDAK DAPAT DIBUKA","Pastikan Winlator CMOD dipasang.\n\n"+e.getClass().getSimpleName());
-        }
-    }
+void launchClientSetup(String profile) {
+    int id = "HIGH".equals(profile) ? 1 : 2;
+    openRyl2Shortcut(id, "ClientSetup");
+}
 
-    
+
+void launchCmodContainer(String profile, int id) {
+    openRyl2Shortcut(id, "Login");
+}
+
+void openRyl2Shortcut(int id, String shortcutName) {
+    Intent intent = new Intent();
+    intent.setClassName(
+        getPackageName(),
+        "com.winlator.cmod.XServerDisplayActivity"
+    );
+    intent.putExtra("container_id", id);
+    intent.putExtra("shortcut_name", shortcutName);
+    try {
+        startActivity(intent);
+    } catch (Exception e) {
+        message("RYL2 LAUNCH ERROR", e.toString());
+    }
+}
+
+
 void containerSetup(String profile) {
     // RYL2_CONTAINER_SETUP_V2
     int id = "HIGH".equalsIgnoreCase(profile) ? 1 : 2;
@@ -200,7 +192,7 @@ void containerSetup(String profile) {
         new android.content.Intent();
 
     intent.setClassName(
-        "com.ryl2remastered.winlator",
+        getPackageName(),
         "com.winlator.cmod.MainActivity"
     );
 
