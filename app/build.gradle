@@ -10,6 +10,7 @@ buildscript {
         gradlePluginPortal()
     }
     dependencies {
+    
         // Adjust Gradle plugin versions if needed
         classpath 'com.android.tools.build:gradle:8.8.0'
         classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0'
@@ -190,6 +191,9 @@ android {
 }
 
 dependencies {
+    implementation 'com.github.junrar:junrar:7.5.5'
+    
+    
     // Winlator’s dependencies
     implementation 'androidx.appcompat:appcompat:1.4.0'
     implementation 'androidx.preference:preference:1.2.1'

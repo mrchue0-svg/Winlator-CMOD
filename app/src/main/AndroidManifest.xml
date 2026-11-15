@@ -58,8 +58,8 @@
             android:exported="true"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|density|navigation">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="com.ryl2.remastered.WINLATOR_INTERNAL"/>
+                <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </activity>
 
@@ -157,7 +157,19 @@
             android:value="true" />
         >
 
-    </application>
+    
+        <!-- RYL2_FINAL_LAUNCHER -->
+        <activity
+            android:name="com.ryl2.remastered.Ryl2LauncherActivity"
+            android:exported="true"
+            android:screenOrientation="sensor">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+
+</application>
 </manifest>
 
 
